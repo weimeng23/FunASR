@@ -92,9 +92,10 @@ class Paraformer():
         else:
             self.language = None
 
-    def __call__(self, wav_content: Union[str, np.ndarray, List[str]], **kwargs) -> List:
+    def __call__(self, wav_content: Union[str, np.ndarray, List[str], List[np.ndarray]], **kwargs) -> List:
         waveform_list = self.load_data(wav_content, self.frontend.opts.frame_opts.samp_freq)
         waveform_nums = len(waveform_list)
+        assert waveform_nums >= 1, "input wav_content is empty"
         asr_res = []
         for beg_idx in range(0, waveform_nums, self.batch_size):
             
@@ -156,7 +157,7 @@ class Paraformer():
         plt.savefig(plotname, bbox_inches='tight')
 
     def load_data(self,
-                  wav_content: Union[str, np.ndarray, List[str]], fs: int = None) -> List:
+                  wav_content: Union[str, np.ndarray, List[str], List[np.ndarray]], fs: int = None) -> List:
         def load_wav(path: str) -> np.ndarray:
             waveform, _ = librosa.load(path, sr=fs)
             return waveform
@@ -168,7 +169,7 @@ class Paraformer():
             return [load_wav(wav_content)]
 
         if isinstance(wav_content, list):
-            return [load_wav(path) for path in wav_content]
+            return [load_wav(path) for path in wav_content] if isinstance(wav_content[0], str) else wav_content
 
         raise TypeError(
             f'The type of {wav_content} is not in [str, np.ndarray, list]')
